@@ -332,10 +332,18 @@ function shoot() {
   camera.updateMatrixWorld();
   rc.setFromCamera({ x: 0, y: 0 }, camera); rc.far = 100;
   const targets = crateMeshes.concat(wallMeshes, bots.filter(b => !b.dead).map(b => b.mesh));
-  const hit = rc.intersectObjects(targets, false)[0];
-  if (hit && hit.object.userData.bot) {
-    const localY = hit.point.y - (hit.object.position.y - 1);   // высота точки над полом бота
-    damageBot(hit.object.userData.bot, localY >= 4 / 3);        // верхняя треть = голова
+  const hit = rc.intersectObjects(targets, true)[0]; 
+  
+  if (hit) {
+    let botObj = hit.object;
+    while (botObj && !botObj.userData.bot) {
+      botObj = botObj.parent;
+    }
+    
+    if (botObj && botObj.userData.bot) {
+      const localY = hit.point.y - (botObj.position.y - 1);
+      damageBot(botObj.userData.bot, localY >= 4 / 3);
+    }
   }
   updateHUD();
   if (P.ammo === 0) reload();
